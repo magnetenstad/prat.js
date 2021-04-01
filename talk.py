@@ -13,6 +13,13 @@ def extract(line, startSymbol, endSymbol):
 		result = line[start + len(startSymbol):end - len(endSymbol)]
 	return result
 
+def getText(line):
+	while '\t' in line:
+		line = line.replace('\t', '')
+	for symbol in ('@{', '>{', '?{', '*{', '#{'):
+		line = line.replace(symbol + extract(line, symbol, '}') + '}', '')
+	return line
+
 class Line:
 	def __init__(self, _id, text='', author='', _next='', choices=[], condition='', action='', comment=''):
 		self.id = _id
@@ -40,7 +47,7 @@ class Talk:
 			talkString = talkString.replace('\\\n', '')
 
 		lines = talkString.splitlines()
-
+		
 		for i, line in enumerate(lines):
 			if extract(line, '@{', '}') == '':
 				lines[i] = line + '@{@' + str(i) +'}'
@@ -50,6 +57,7 @@ class Talk:
 			choices = []
 			_id = extract(line, '@{', '}')
 			_next = extract(line, '>{', '}')
+
 			if tabs_i % 2 == 0:
 				for j in range(i + 1, len(lines)):
 					tabs_j = prefixCount(lines[j], '\t')
@@ -61,10 +69,10 @@ class Talk:
 						choices.append(extract(lines[j], '@{', '}'))
 			elif _next == '' and i + 1 < len(lines):
 				_next = extract(lines[i + 1], '@{', '}')
-
+			
 			talk.addLine(Line(
 				_id,
-				text=extract(line, '&{', '}'),
+				text=getText(line),
 				author='',
 				_next=_next,
 				choices=choices,
