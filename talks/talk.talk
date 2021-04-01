@@ -1,0 +1,13 @@
+&{Hei på deg!} @{start}
+	&{Hvem er du?}
+		&{Jeg heter Arne.} @{arneStart}
+		&{Nå skal jeg fortelle deg.}
+		&{En lang og mektig historie.}
+		&{Vil du høre?}
+			&{Gjerne det.}
+				&{Flott!} >{arneStart}
+			&{Nei.}
+				&{Det var ikke særlig hyggelig.}
+				&{Ha det bra.}
+	&{Så hyggelig!}
+		&{Veldig hyggelig.} >{start}
