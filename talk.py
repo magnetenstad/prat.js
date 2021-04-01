@@ -100,9 +100,3 @@ class Talk:
 			return False
 		self.key = key
 		return True
-
-with open('talks/talk.talk') as file:
-	talkString = file.read()
-
-talk = Talk.fromString(talkString)
-talk.talk()
