@@ -1,35 +1,63 @@
 
-def prefixCount(string, prefix):
+class Symbol:
+	key = '#'
+	author = '@'
+	goto = '>'
+	condition = '?'
+	action = '!'
+	comment = '%'
+	left = '{'
+	right = '}'
+
+def prefixcount(string, prefix):
 	i = 0
 	while string[i] == prefix:
 		i += 1
 	return i
 
-def extract(line, startSymbol, endSymbol):
-	result = ''
-	if startSymbol in line:
-		start = line.find(startSymbol)
-		end = start + line[start:].find(endSymbol) + len(endSymbol)
-		result = line[start + len(startSymbol):end - len(endSymbol)]
-	return result
+def extract(string, startsymbol, endsymbol):
+	if not startsymbol in string and endsymbol in string:
+		return ('', string)
+	
+	start = string.find(startsymbol) + len(startsymbol)
+	end = -1
+	depth = 0
+	for i in range(start, len(string)):
+		s = string[i:]
+		if not depth and s.startswith(endsymbol):
+			end = i
+			break
+		depth += s.startswith(Symbol.left)
+		depth -= s.startswith(Symbol.right)
+	
+	if end == -1:
+		return ('', string)
+	
+	extraction = string[start:end]
+	return (extraction, string.replace(startsymbol + extraction + endsymbol, ''))
 
-def getText(line):
-	while '\t' in line:
-		line = line.replace('\t', '')
-	for symbol in ('@{', '>{', '?{', '*{', '#{'):
-		line = line.replace(symbol + extract(line, symbol, '}') + '}', '')
-	return line
+def extractattribute(string, symbol):
+	return extract(string, symbol + Symbol.left, Symbol.right)
+
+def extractkey(string):
+	return extractattribute(string, Symbol.key)[0]
+
+def isempty(string):
+	return string == '' or string.isspace()
 
 class Line:
-	def __init__(self, _id, text='', author='', _next='', choices=[], condition='', action='', comment=''):
-		self.id = _id
+	def __init__(self, key, text='', author='', goto='', choices=[], condition='', action='', comment=''):
+		self.key = key
 		self.text = text
 		self.author = author
-		self.next = _next
+		self.goto = goto
 		self.choices = choices
 		self.condition = condition
 		self.action = action
 		self.comment = comment
+
+	def __repr__(self) -> str:
+		return self.author + ': ' + self.text
 
 class Talk:
 	def __init__(self):
@@ -45,59 +73,80 @@ class Talk:
 			talkString = talkString.replace('\\\n\t', '\\\n')
 		while '\\\n' in talkString:
 			talkString = talkString.replace('\\\n', '')
+		
+		lines = [line for line in talkString.splitlines() if not isempty(line)]
 
-		lines = talkString.splitlines()
+		for i, line in enumerate(lines):
+			if isempty(extractkey(line)):
+				lines[i] = line + Symbol.key + Symbol.left + str(i) + Symbol.right
+
+		previousauthor = ''
 		
 		for i, line in enumerate(lines):
-			if extract(line, '@{', '}') == '':
-				lines[i] = line + '@{@' + str(i) +'}'
-
-		for i, line in enumerate(lines):
-			tabs_i = prefixCount(line, '\t')
 			choices = []
-			_id = extract(line, '@{', '}')
-			_next = extract(line, '>{', '}')
-
-			if tabs_i % 2 == 0:
-				for j in range(i + 1, len(lines)):
-					tabs_j = prefixCount(lines[j], '\t')
-					if tabs_j <= tabs_i:
-						if j == i + 1 and tabs_j == tabs_i and _next == '':
-							_next = extract(lines[j], '@{', '}')
-						break
-					elif tabs_j == tabs_i + 1:
-						choices.append(extract(lines[j], '@{', '}'))
-			elif _next == '' and i + 1 < len(lines):
-				_next = extract(lines[i + 1], '@{', '}')
+			goto, text = extractattribute(line, Symbol.goto)
 			
+			if isempty(goto):
+				tabs_i = prefixcount(line, '\t')
+				if tabs_i % 2 == 0:
+					tabs_min = tabs_i
+					for j in range(i + 1, len(lines)):
+						tabs_j = prefixcount(lines[j], '\t')
+						tabs_min = min(tabs_j, tabs_min)
+
+						if tabs_j <= tabs_min:
+							if choices:
+								break
+							if tabs_j % 2 == 0:
+								goto = extractkey(lines[j])
+								break
+						
+						if tabs_j == tabs_i + 1:
+							choices.append(extractkey(lines[j]))
+				
+				elif i + 1 < len(lines):
+					goto = extractkey(lines[i + 1])
+
+			key, text = extractattribute(text, Symbol.key)
+			author, text = extractattribute(text, Symbol.author)
+			condition, text = extractattribute(text, Symbol.condition)
+			action, text = extractattribute(text, Symbol.action)
+			comment, text = extractattribute(text, Symbol.comment)
+
 			talk.addLine(Line(
-				_id,
-				text=getText(line),
-				author='',
-				_next=_next,
-				choices=choices,
-				condition=extract(line, '?{', '}'),
-				action=extract(line, '*{', '}'),
-				comment=extract(line, '#{', '}')
+				key,
+				text = text.strip(),
+				author = author if not isempty(author) else previousauthor,
+				goto = goto,
+				choices = choices,
+				condition = condition,
+				action = action,
+				comment = comment
 			))
 
 			if i == 0:
-				talk.setKey(_id)
+				talk.setKey(key)
+
+			previousauthor = author
 		
 		return talk
 
 	def addLine(self, line: Line):
-		self.lines[line.id] = line
+		self.lines[line.key] = line
 
 	def talk(self):
 		line = self.lines[self.key]
-		choices = [l for l in self.lines.values() if l.id in line.choices]
-		key = line.next
-		print(line.text)
+		while isempty(line.text):
+			line = self.lines[line.goto]
+		key = line.goto
+
+		choices = [l for l in self.lines.values() if l.key in line.choices]
+		
+		print(line)
 		if choices:
 			for i, line in enumerate(choices):
-				print(i, line.text)
-			key = choices[int(input())].next
+				print(i, line)
+			key = choices[int(input())].key
 		else:
 			input()
 		if self.setKey(key):
