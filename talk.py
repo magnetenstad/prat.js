@@ -163,4 +163,3 @@ class Talk:
 		else:
 			self.key = line.goto
 		
-		self.talk()
