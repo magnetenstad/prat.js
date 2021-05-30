@@ -78,10 +78,10 @@ class Talk:
 
 		for i, line in enumerate(lines):
 			if isempty(extractkey(line)):
-				lines[i] = line + Symbol.key + Symbol.left + str(i) + Symbol.right
+				lines[i] = line + Symbol.key + Symbol.left + Symbol.key + str(i) + Symbol.right
 
 		previousauthor = ''
-		
+
 		for i, line in enumerate(lines):
 			choices = []
 			goto, text = extractattribute(line, Symbol.goto)
@@ -125,7 +125,7 @@ class Talk:
 			))
 
 			if i == 0:
-				talk.setKey(key)
+				talk.key = key
 
 			previousauthor = author
 		
@@ -133,27 +133,34 @@ class Talk:
 
 	def addLine(self, line: Line):
 		self.lines[line.key] = line
-
+	
 	def talk(self):
+		string = ''
 		line = self.lines[self.key]
+
 		while isempty(line.text):
-			line = self.lines[line.goto]
-		key = line.goto
+			self.key = line.goto
+			line = self.lines[self.key]
+
+		string += str(line) + '\n'
 
 		choices = [l for l in self.lines.values() if l.key in line.choices]
-		
-		print(line)
 		if choices:
-			for i, line in enumerate(choices):
-				print(i, line)
-			key = choices[int(input())].key
-		else:
-			input()
-		if self.setKey(key):
-			self.talk()
+			for i, choice in enumerate(choices):
+				string += str(i) + ' ' + str(choice) + '\n'
 		
-	def setKey(self, key):
-		if not key in self.lines:
-			return False
-		self.key = key
-		return True
+		return string
+
+	def input(self, string):
+		line = self.lines[self.key]
+		choices = [l.key for l in self.lines.values() if l.key in line.choices]
+		
+		if choices:
+			try:
+				self.key = choices[int(string)]
+			except:
+				self.key = choices[0]
+		else:
+			self.key = line.goto
+		
+		self.talk()
