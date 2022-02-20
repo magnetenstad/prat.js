@@ -62,19 +62,17 @@ class Line:
 class Talk:
 	def __init__(self):
 		self.lines = {}
-		self.key = ''
+		self.key = None
 	
 	@staticmethod
-	def fromString(talkString):
+	def fromString(talk_string):
 
 		talk = Talk()
 
-		while '\\\n\t' in talkString:
-			talkString = talkString.replace('\\\n\t', '\\\n')
-		while '\\\n' in talkString:
-			talkString = talkString.replace('\\\n', '')
+		talk_string = talk_string.replace('\\\n\t', '\\\n')
+		talk_string = talk_string.replace('\\\n', '')
 		
-		lines = [line for line in talkString.splitlines() if not isempty(line)]
+		lines = [line for line in talk_string.splitlines() if not isempty(line)]
 
 		for i, line in enumerate(lines):
 			if isempty(extractkey(line)):
@@ -101,7 +99,7 @@ class Talk:
 								goto = extractkey(lines[j])
 								break
 						
-						if tabs_j == tabs_i + 1:
+						if tabs_j == tabs_i + 1 and tabs_i == tabs_min:
 							choices.append(extractkey(lines[j]))
 				
 				elif i + 1 < len(lines):
