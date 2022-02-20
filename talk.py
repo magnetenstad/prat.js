@@ -12,7 +12,7 @@ class Line:
 		self.comment = comment
 
 	def __repr__(self) -> str:
-		return self.author + ': ' + self.text
+		return self.author + ': ' + self.text if self.author else self.text
 
 class Talk:
 	def __init__(self):
