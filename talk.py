@@ -1,49 +1,4 @@
-
-class Symbol:
-	key = '#'
-	author = '@'
-	goto = '>'
-	condition = '?'
-	action = '!'
-	comment = '%'
-	left = '{'
-	right = '}'
-
-def prefixcount(string, prefix):
-	i = 0
-	while string[i] == prefix:
-		i += 1
-	return i
-
-def extract(string, startsymbol, endsymbol):
-	if not startsymbol in string and endsymbol in string:
-		return ('', string)
-	
-	start = string.find(startsymbol) + len(startsymbol)
-	end = -1
-	depth = 0
-	for i in range(start, len(string)):
-		s = string[i:]
-		if not depth and s.startswith(endsymbol):
-			end = i
-			break
-		depth += s.startswith(Symbol.left)
-		depth -= s.startswith(Symbol.right)
-	
-	if end == -1:
-		return ('', string)
-	
-	extraction = string[start:end]
-	return (extraction, string.replace(startsymbol + extraction + endsymbol, ''))
-
-def extractattribute(string, symbol):
-	return extract(string, symbol + Symbol.left, Symbol.right)
-
-def extractkey(string):
-	return extractattribute(string, Symbol.key)[0]
-
-def isempty(string):
-	return string == '' or string.isspace()
+from util import *
 
 class Line:
 	def __init__(self, key, text='', author='', goto='', choices=[], condition='', action='', comment=''):
@@ -65,78 +20,70 @@ class Talk:
 		self.key = None
 	
 	@staticmethod
-	def fromString(talk_string):
-
+	def from_string(talk_string):
 		talk = Talk()
-
 		talk_string = talk_string.replace('\\\n\t', '\\\n')
 		talk_string = talk_string.replace('\\\n', '')
-		
-		lines = [line for line in talk_string.splitlines() if not isempty(line)]
+		lines = [line for line in talk_string.splitlines() if not is_empty(line)]
 
 		for i, line in enumerate(lines):
-			if isempty(extractkey(line)):
-				lines[i] = line + Symbol.key + Symbol.left + Symbol.key + str(i) + Symbol.right
+			if is_empty(extract_key(line)):
+				key_attr = Symbol.key + Symbol.left + Symbol.key + str(i) + Symbol.right
+				lines[i] = line + key_attr
 
-		previousauthor = ''
+		author_prev = ''
 
 		for i, line in enumerate(lines):
 			choices = []
-			goto, text = extractattribute(line, Symbol.goto)
+			goto, text = extract_attr(line, Symbol.goto)
 			
-			if isempty(goto):
-				tabs_i = prefixcount(line, '\t')
+			if is_empty(goto):
+				tabs_i = prefix_count(line, '\t')
 				if tabs_i % 2 == 0:
 					tabs_min = tabs_i
 					for j in range(i + 1, len(lines)):
-						tabs_j = prefixcount(lines[j], '\t')
+						tabs_j = prefix_count(lines[j], '\t')
 						tabs_min = min(tabs_j, tabs_min)
 
 						if tabs_j <= tabs_min:
 							if choices:
 								break
 							if tabs_j % 2 == 0:
-								goto = extractkey(lines[j])
+								goto = extract_key(lines[j])
 								break
 						
 						if tabs_j == tabs_i + 1 and tabs_i == tabs_min:
-							choices.append(extractkey(lines[j]))
+							choices.append(extract_key(lines[j]))
 				
 				elif i + 1 < len(lines):
-					goto = extractkey(lines[i + 1])
+					goto = extract_key(lines[i + 1])
 
-			key, text = extractattribute(text, Symbol.key)
-			author, text = extractattribute(text, Symbol.author)
-			condition, text = extractattribute(text, Symbol.condition)
-			action, text = extractattribute(text, Symbol.action)
-			comment, text = extractattribute(text, Symbol.comment)
-
-			talk.addLine(Line(
-				key,
-				text = text.strip(),
-				author = author if not isempty(author) else previousauthor,
-				goto = goto,
-				choices = choices,
-				condition = condition,
-				action = action,
-				comment = comment
-			))
+			key, text 			= extract_attr(text, Symbol.key)
+			author, text 		= extract_attr(text, Symbol.author)
+			condition, text = extract_attr(text, Symbol.condition)
+			action, text 		= extract_attr(text, Symbol.action)
+			comment, text 	= extract_attr(text, Symbol.comment)
+			author = author if not is_empty(author) else author_prev
+			text = text.strip()
+			talk.add_line(
+				Line(key, text, author, goto, choices, condition, action, comment)
+			)
 
 			if i == 0:
 				talk.key = key
 
-			previousauthor = author
+			author_prev = author
 		
 		return talk
 
-	def addLine(self, line: Line):
+	def add_line(self, line: Line):
 		self.lines[line.key] = line
 	
 	def talk(self):
 		string = ''
 		line = self.lines[self.key]
 
-		while isempty(line.text):
+		while is_empty(line.text):
 			self.key = line.goto
 			line = self.lines[self.key]
 
