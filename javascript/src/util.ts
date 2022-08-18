@@ -55,6 +55,6 @@ export const extractKey = (string: string) => {
   return extractAttribute(string, TalkSymbol.key).extraction;
 };
 
-export const isEmpty = (string: string) => {
-  return string.trim() === '';
+export const isEmpty = (str: string | null | undefined) => {
+  return str === undefined || str === null || str.trim() === '';
 };

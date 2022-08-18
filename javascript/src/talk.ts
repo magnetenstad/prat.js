@@ -139,9 +139,14 @@ export class Talk {
   }
 
   talk() {
-    if (this.key == null) return 'ERROR: Key is null!';
-    const line = this.lines.get(this.key);
+    let line = this.lines.get(this.key);
     if (line == null) return 'ERROR: Invalid key!';
+
+    while (isEmpty(line?.text)) {
+      this.setKey(line.goto);
+      line = this.lines.get(this.key);
+      if (line == null) return 'ERROR: Invalid key!';
+    }
 
     let result = line.toString() + '\n';
     line.getChoices(this).forEach((choice, i) => {
@@ -154,12 +159,13 @@ export class Talk {
   input(string: string) {
     const line = this.lines.get(this.key);
     if (line == null) return 'ERROR: Invalid key!';
+
     const choices = line.getChoices(this);
     if (choices.length > 0) {
       try {
-        this.setKey(choices[parseInt(string)].goto);
+        this.setKey(choices[parseInt(string)].key);
       } catch {
-        this.setKey(choices[0].goto);
+        this.setKey(choices[0].key);
       }
     } else {
       this.setKey(line.goto);
