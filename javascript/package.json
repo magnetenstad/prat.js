@@ -1,13 +1,18 @@
 {
   "name": "pratjs",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "",
   "main": "index.js",
+  "types": "lib/index.d.ts",
   "type": "module",
   "scripts": {
-    "start": "tsc && node src/index.js"
+    "start": "tsc && node src/index.js",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "files": [
+    "lib/**/*"
+  ]
 }

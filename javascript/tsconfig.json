@@ -3,13 +3,14 @@
     "lib": ["es2021", "DOM"],
     "module": "ES2022",
     "target": "es2021",
-
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "outDir": "./lib",
+    "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }
