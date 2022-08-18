@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "lib": ["es2021", "DOM"],
+    "module": "ES2022",
+    "target": "es2021",
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}

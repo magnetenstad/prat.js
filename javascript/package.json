@@ -1,0 +1,21 @@
+{
+  "name": "talk.js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "tsc && node src/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.7.6",
+    "@types/prompt": "^1.1.2"
+  },
+  "dependencies": {
+    "prompt": "^1.3.0",
+    "virtual-file-system": "^1.1.6"
+  }
+}
