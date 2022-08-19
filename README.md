@@ -11,20 +11,20 @@ https://github.com/magnetenstad/talkgrammar
 
 ## JS Example
 
-js``
+```js
 import { Prat } from 'pratjs'
 
-const talkFile = // load talk file
+const talkFile = ...
 const prat = Prat.fromString(talkFile)
 
 console.log(prat.getLine().text) // gets current line content
 console.log(prat.getChoices()) // gets current choice lines
 prat.input('0') // to select a choice, by index
-``
+```
 
 ## Example Talk file
 
-``
+```
 %{ This is a basic talk file to demonstrate key concepts. }
 
 #{start}
@@ -62,4 +62,4 @@ We'll see you later, World!
 This line \
 will never \
 be reached.
-``
+```
