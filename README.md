@@ -1,5 +1,9 @@
 # Talk / pratjs
 
+## Demo
+
+https://magne.dev/chat
+
 ## NPM
 
 https://www.npmjs.com/package/pratjs
