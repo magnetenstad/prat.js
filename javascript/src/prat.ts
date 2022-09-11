@@ -14,8 +14,11 @@ class Line {
   goto: string;
   choices: string[];
   condition: string;
+  initAction: string;
   action: string;
+  inherit: string;
   comment: string;
+  context = {};
 
   constructor(
     key: string,
@@ -24,7 +27,9 @@ class Line {
     goto: string,
     choices: string[],
     condition: string,
+    initAction: string,
     action: string,
+    inherit: string,
     comment: string
   ) {
     this.key = key;
@@ -33,7 +38,9 @@ class Line {
     this.goto = goto;
     this.choices = choices;
     this.condition = condition;
+    this.initAction = initAction;
     this.action = action;
+    this.inherit = inherit;
     this.comment = comment;
   }
 
@@ -44,17 +51,37 @@ class Line {
   getChoices(talk: Prat) {
     return [...talk.lines.values()].filter((l) => this.choices.includes(l.key));
   }
+
+  apply(line: Line | undefined | null) {
+    if (!line) return;
+    if (!this.text) this.text = line.text;
+    if (!this.author) this.author = line.author;
+    if (!this.goto) this.goto = line.goto;
+    if (!this.choices) this.choices = line.choices;
+    if (!this.condition) this.condition = line.condition;
+    if (!this.initAction) this.initAction = line.initAction;
+    if (!this.action) this.action = line.action;
+    if (!this.inherit) this.inherit = line.inherit;
+    if (!this.comment) this.comment = line.comment;
+  }
 }
 
 export class Prat {
   lines: Map<string, Line>;
-  private key: string;
-  private context = {};
+  private key: string = '';
+  private context = { global: {}, local: {} };
 
   constructor(lines: Map<string, Line>, key: string) {
     this.lines = lines;
+    this.lines.forEach((line) => {
+      if (line.inherit) {
+        line.apply(this.lines.get(line.inherit));
+      }
+      if (line.initAction) {
+        this.evalJavascript(line.initAction, line);
+      }
+    });
     this.setKey(key);
-    this.key = key;
   }
 
   static fromString(talk_string: string): Prat {
@@ -115,42 +142,38 @@ export class Prat {
         : authorPrev;
       extraction = extractAttribute(extraction.rest, PratSymbol.condition);
       const condition = extraction.extraction;
+      extraction = extractAttribute(extraction.rest, PratSymbol.initAction);
+      const initAction = extraction.extraction;
       extraction = extractAttribute(extraction.rest, PratSymbol.action);
       const action = extraction.extraction;
+      extraction = extractAttribute(extraction.rest, PratSymbol.inherit);
+      const inherit = extraction.extraction;
       extraction = extractAttribute(extraction.rest, PratSymbol.comment);
       const comment = extraction.extraction;
 
-      talkLines.set(
+      const lineInst = new Line(
         key,
-        new Line(
-          key,
-          extraction.rest.trim(),
-          author,
-          goto,
-          choices,
-          condition,
-          action,
-          comment
-        )
+        extraction.rest.trim(),
+        author,
+        goto,
+        choices,
+        condition,
+        initAction,
+        action,
+        inherit,
+        comment
       );
+      talkLines.set(key, lineInst);
       authorPrev = author;
     });
 
-    return new Prat(talkLines, extractKey(lines[0]));
+    const prat = new Prat(talkLines, extractKey(lines[0]));
+    return prat;
   }
 
   getLine(): Line {
     let line = this.lines.get(this.key);
     if (line == null) throw new Error(`Invalid key <${this.key}>.`);
-
-    while (
-      isEmpty(line.text) ||
-      (line.condition && !this.evalJavascript(line.condition))
-    ) {
-      this.setKey(line.goto);
-      line = this.lines.get(this.key);
-      if (line == null) throw new Error(`Invalid key <${this.key}>.`);
-    }
     return line;
   }
 
@@ -168,10 +191,9 @@ export class Prat {
   }
 
   input(choiceIndex?: string | number) {
-    const line = this.lines.get(this.key);
-    if (line == null) return 'ERROR: Invalid key!';
+    const linePrev = this.getLine();
 
-    const choices = line.getChoices(this);
+    const choices = linePrev.getChoices(this);
     if (choices.length > 0) {
       choiceIndex = choiceIndex ?? 0;
       try {
@@ -183,25 +205,35 @@ export class Prat {
         this.setKey(choices[0].key);
       }
     } else {
-      this.setKey(line.goto);
+      this.setKey(linePrev.goto);
     }
-    this.evalJavascript(this.getLine().action);
   }
 
-  evalJavascript(javascript: string) {
+  evalJavascript(javascript: string, line?: Line) {
     if (!javascript) return;
-    return this.boundEval(javascript, this.context);
-  }
-
-  boundEval(javascript: string, context: object) {
-    let fn = Function(`"use strict"; const $ = this; return (${javascript})`);
-    return fn.bind(context)();
+    line = line ?? this.getLine();
+    this.context.local = line.context;
+    const fn = Function(
+      `"use strict"; const $g = this.global; const $l = this.local; return (${javascript})`
+    );
+    const result = fn.bind(this.context)();
+    // console.log(line.key, '|', javascript, '|', result);
+    return result;
   }
 
   setKey(key: string) {
-    if (!this.lines.has(key)) {
-      throw new Error('Key is not valid!');
-    }
     this.key = key;
+    const line = this.lines.get(this.key);
+    if (!line) {
+      throw new Error(`Invalid key <${this.key}>.`);
+    }
+    if (
+      isEmpty(line.text) ||
+      (line.condition && !this.evalJavascript(line.condition, line))
+    ) {
+      this.setKey(line.goto);
+      return;
+    }
+    this.evalJavascript(line.action, line);
   }
 }

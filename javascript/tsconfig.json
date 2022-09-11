@@ -3,7 +3,7 @@
     "lib": ["es2021", "DOM"],
     "module": "CommonJS",
     "target": "es2021",
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./lib",
