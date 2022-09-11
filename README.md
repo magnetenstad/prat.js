@@ -21,9 +21,9 @@ import { Prat } from 'pratjs'
 const talkFile = ...
 const prat = Prat.fromString(talkFile)
 
-console.log(prat.getLine().text) // gets current line content
-console.log(prat.getChoices()) // gets current choice lines
-prat.input('0') // to select a choice, by index
+console.log(prat.getText()) // gets current line content
+console.log(prat.getChoiceTexts()) // gets current choice lines
+prat.input(0) // to select a choice, by index
 ```
 
 ## Example Talk file
@@ -37,29 +37,28 @@ prat.input('0') // to select a choice, by index
 
 	@{Mario} We're doing great. %{ A selectable response to line 5 }
 		@{Luigi} Absolutely! 
-		@{World} How lovely. %{ Will go to line 17 }
+		@{World} How lovely. %{ Will go to 'World: I hear you..' }
 
 	@{Luigi} Not so great, sir. %{ A selectable response to line 5 }
 		@{World} How come? 
 		@{Mario} Luigi lost his hat this morning.
-		@{World} Well, you can have mine. !{luigi.give(worldHat)}
-		@{Luigi} Thanks a bunch! %{ Will go to line 17 }
+		@{World} Well, you can have mine. !{$g.hat = 'worldHat'}
+		@{Luigi} Thanks a bunch! %{ Will go to 'World: I hear you..' }
 		
-@{World} I hear you have met a girl, Luigi. What is her name?
+@{World} I hear you have met someone, Luigi. What is their name?
 	
 	@{Luigi} I don't want to talk about it.
-		@{World} Oh, my apologies.
+		@{World} My apologies.
 	
-	@{Luigi} Yes, I have. !{name = input()}
-		#{sayName}
-		@{Luigi} Her name is $name$.
-		@{World} I can't wait to meet Alice.
-			@{Luigi} Her name is not Alice! !{name = input()}
-			@{Luigi} Great..
+	@{Luigi} Yes, I have.
+		@{World} And their name is?
+			@{Luigi} Tom !{$g.name = 'Tom'}
+			@{Luigi} Lisa !{$g.name = 'Lisa'}					
+		@{World} I can't wait to meet ${$g.name}.
 
 @{Mario} Well, we better get going.
 We'll see you later, World!
-?{luigi.has(worldHat)} @{Luigi} And thanks for the hat!
+?{$g.hat} @{Luigi} And thanks for the hat!
 @{World} Goodbye!
 >{start} %{ Loops back to start }
 
