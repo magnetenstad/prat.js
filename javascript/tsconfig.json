@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "lib": ["es2021", "DOM"],
-    "module": "ES2022",
+    "module": "CommonJS",
     "target": "es2021",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./lib",
@@ -12,5 +12,5 @@
     "moduleResolution": "node"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules"]
 }

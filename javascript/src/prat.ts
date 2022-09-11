@@ -1,11 +1,11 @@
-import { TalkSymbol as PratSymbol } from './symbol.js';
+import { TalkSymbol as PratSymbol } from './symbol';
 import {
   Extraction,
   extractAttribute,
   extractKey,
   isEmpty,
   prefixCount,
-} from './util.js';
+} from './util';
 
 class Line {
   key: string;
@@ -49,6 +49,7 @@ class Line {
 export class Prat {
   lines: Map<string, Line>;
   private key: string;
+  private context = {};
 
   constructor(lines: Map<string, Line>, key: string) {
     this.lines = lines;
@@ -142,7 +143,10 @@ export class Prat {
     let line = this.lines.get(this.key);
     if (line == null) throw new Error(`Invalid key <${this.key}>.`);
 
-    while (isEmpty(line?.text)) {
+    while (
+      isEmpty(line.text) ||
+      (line.condition && !this.evalJavascript(line.condition))
+    ) {
       this.setKey(line.goto);
       line = this.lines.get(this.key);
       if (line == null) throw new Error(`Invalid key <${this.key}>.`);
@@ -163,20 +167,35 @@ export class Prat {
     return result;
   }
 
-  input(string: string) {
+  input(choiceIndex?: string | number) {
     const line = this.lines.get(this.key);
     if (line == null) return 'ERROR: Invalid key!';
 
     const choices = line.getChoices(this);
     if (choices.length > 0) {
+      choiceIndex = choiceIndex ?? 0;
       try {
-        this.setKey(choices[parseInt(string)].key);
+        if (typeof choiceIndex === 'string') {
+          choiceIndex = parseInt(choiceIndex);
+        }
+        this.setKey(choices[choiceIndex].key);
       } catch {
         this.setKey(choices[0].key);
       }
     } else {
       this.setKey(line.goto);
     }
+    this.evalJavascript(this.getLine().action);
+  }
+
+  evalJavascript(javascript: string) {
+    if (!javascript) return;
+    return this.boundEval(javascript, this.context);
+  }
+
+  boundEval(javascript: string, context: object) {
+    let fn = Function(`"use strict"; const $ = this; return (${javascript})`);
+    return fn.bind(context)();
   }
 
   setKey(key: string) {

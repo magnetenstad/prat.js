@@ -1,4 +1,4 @@
-import { TalkSymbol } from './symbol.js';
+import { TalkSymbol } from './symbol';
 
 export interface Extraction {
   extraction: string;

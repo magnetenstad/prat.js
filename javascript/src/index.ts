@@ -1,3 +1,3 @@
-import { Prat } from './prat.js';
+import { Prat } from './prat';
 
 export { Prat };
