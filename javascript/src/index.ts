@@ -1,3 +1,3 @@
-import { Prat } from './prat';
+import { Talk } from './prat';
 
-export { Prat };
+export { Talk as Prat };

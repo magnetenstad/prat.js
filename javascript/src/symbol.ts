@@ -4,9 +4,10 @@ export class TalkSymbol {
   static goto = '>';
   static condition = '?';
   static action = '!';
-  static initAction = '!!';
+  static prepare = '!!';
   static comment = '%';
+  static inherit = '+';
+  static insert = '$';
   static left = '{';
   static right = '}';
-  static inherit = '+';
 }

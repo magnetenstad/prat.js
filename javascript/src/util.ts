@@ -16,7 +16,8 @@ export const prefixCount = (string: string, prefix: string) => {
 export const extract = (
   string: string,
   startSymbol: string,
-  endSymbol: string
+  endSymbol: string,
+  replace?: (extraction: string) => string
 ): Extraction => {
   if (!string.includes(startSymbol) && string.includes(endSymbol)) {
     return { extraction: '', rest: string };
@@ -43,7 +44,10 @@ export const extract = (
   const extraction = string.substring(start, end);
   return {
     extraction: extraction,
-    rest: string.replace(startSymbol + extraction + endSymbol, ''),
+    rest: string.replace(
+      startSymbol + extraction + endSymbol,
+      replace ? replace(extraction) : ''
+    ),
   };
 };
 

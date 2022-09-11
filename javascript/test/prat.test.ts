@@ -5,7 +5,7 @@ describe('Prat', () => {
     const prat = Prat.fromString(`
 Hello world!
 `);
-    expect(prat.getLine().text).toBe('Hello world!');
+    expect(prat.getText()).toBe('Hello world!');
   });
 
   test('Conditions', () => {
@@ -14,9 +14,9 @@ Hello 1!
 Hello 2! ?{false}
 Hello 3!
 `);
-    expect(prat.getLine().text).toBe('Hello 1!');
+    expect(prat.getText()).toBe('Hello 1!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 3!');
+    expect(prat.getText()).toBe('Hello 3!');
   });
 
   test('Actions, global scope', () => {
@@ -28,13 +28,13 @@ Hello 4! !{$g.x = true}
 Hello 5! ?{$g.x}
 Hello 6! ?{!$g.x}
 `);
-    expect(prat.getLine().text).toBe('Hello 1!');
+    expect(prat.getText()).toBe('Hello 1!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 3!');
+    expect(prat.getText()).toBe('Hello 3!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 4!');
+    expect(prat.getText()).toBe('Hello 4!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 5!');
+    expect(prat.getText()).toBe('Hello 5!');
   });
 
   test('Actions, local scope', () => {
@@ -45,15 +45,15 @@ Hello 2!
 Hello 3! !!{$l.show = true} ?{$l.show} !{$l.show = false}
 >{start}
 `);
-    expect(prat.getLine().text).toBe('Hello 1!');
+    expect(prat.getText()).toBe('Hello 1!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 2!');
+    expect(prat.getText()).toBe('Hello 2!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 3!');
+    expect(prat.getText()).toBe('Hello 3!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 2!');
+    expect(prat.getText()).toBe('Hello 2!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 2!');
+    expect(prat.getText()).toBe('Hello 2!');
   });
 
   test('Inheritance', () => {
@@ -67,14 +67,25 @@ Hello 2!
 Hello 3! +{showOnce}
 >{start}
 `);
-    expect(prat.getLine().text).toBe('Hello 1!');
+    expect(prat.getText()).toBe('Hello 1!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 2!');
+    expect(prat.getText()).toBe('Hello 2!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 3!');
+    expect(prat.getText()).toBe('Hello 3!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 2!');
+    expect(prat.getText()).toBe('Hello 2!');
     prat.input();
-    expect(prat.getLine().text).toBe('Hello 2!');
+    expect(prat.getText()).toBe('Hello 2!');
+  });
+
+  test('Insertions', () => {
+    const prat = Prat.fromString(`
+#{start} Hello \${$g.a}! !!{$g.a = 0} !{$g.a++} >{start}
+`);
+    expect(prat.getText()).toBe('Hello 1!');
+    prat.input();
+    expect(prat.getText()).toBe('Hello 2!');
+    prat.input();
+    expect(prat.getText()).toBe('Hello 3!');
   });
 });
