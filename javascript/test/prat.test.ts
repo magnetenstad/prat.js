@@ -113,25 +113,30 @@ Hello 3 +{showOnce}
 
 #{start}
 Hello 1
-\tResponse 1
+\tResponse 1 +{showOnce}
 \tResponse 2 +{showOnce}
+Hello 2
 >{start}
 `);
     expect(prat.getText()).toBe('Hello 1');
+    expect(prat.getChoiceTexts().length).toBe(2);
     expect(prat.getChoiceTexts()[0]).toBe('Response 1');
     expect(prat.getChoiceTexts()[1]).toBe('Response 2');
-    prat.input(0);
+    prat.input();
     expect(prat.getText()).toBe('Response 1');
     prat.input();
+    prat.input();
     expect(prat.getText()).toBe('Hello 1');
-    expect(prat.getChoiceTexts()[0]).toBe('Response 1');
-    expect(prat.getChoiceTexts()[1]).toBe('Response 2');
+    expect(prat.getChoiceTexts().length).toBe(1);
+    expect(prat.getChoiceTexts()[0]).toBe('Response 2');
     prat.input(1);
     expect(prat.getText()).toBe('Response 2');
     prat.input();
+    prat.input();
     expect(prat.getText()).toBe('Hello 1');
-    expect(prat.getChoiceTexts()[0]).toBe('Response 1');
-    expect(prat.getChoiceTexts()[1]).toBe(undefined);
+    expect(prat.getChoiceTexts().length).toBe(0);
+    prat.input();
+    expect(prat.getText()).toBe('Hello 2');
   });
 
   test('Insertions', () => {

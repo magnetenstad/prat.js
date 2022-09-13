@@ -137,14 +137,9 @@ export class Talk {
           for (let j = i + 1; j < lines.length; j++) {
             const tabsJ = prefixCount(lines[j], '\t');
             tabsMin = Math.min(tabsJ, tabsMin);
-            if (tabsJ <= tabsMin) {
-              if (choices.length > 0) {
-                break;
-              }
-              if (tabsJ % 2 == 0) {
-                goto = extractKey(lines[j]);
-                break;
-              }
+            if (tabsJ <= tabsMin && tabsJ % 2 == 0) {
+              goto = extractKey(lines[j]);
+              break;
             }
             if (tabsJ == tabsI + 1 && tabsI == tabsMin) {
               choices.push(extractKey(lines[j]));
