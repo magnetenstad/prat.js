@@ -19,7 +19,7 @@ class Line {
   action: string;
   inherit: string;
   comment: string;
-  context = {};
+  context: { instance: Line } = { instance: this };
 
   constructor(
     key: string,
