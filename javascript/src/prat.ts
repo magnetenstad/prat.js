@@ -46,7 +46,18 @@ class Line {
   }
 
   getChoices(talk: Talk): Line[] {
-    return [...talk.lines.values()].filter((l) => this.choices.includes(l.key));
+    const choices = [...talk.lines.values()].filter((l) =>
+      this.choices.includes(l.key)
+    );
+    for (let i = 0; i < choices.length; i++) {
+      if (
+        choices[i].condition &&
+        !talk.evalJavascript(choices[i].condition, choices[i])
+      ) {
+        choices.splice(i--, 1);
+      }
+    }
+    return choices;
   }
 
   getText(talk: Talk): string {
@@ -121,6 +132,7 @@ export class Talk {
       if (isEmpty(goto)) {
         const tabsI = prefixCount(line, '\t');
         if (tabsI % 2 == 0) {
+          // is not choice
           let tabsMin = tabsI;
           for (let j = i + 1; j < lines.length; j++) {
             const tabsJ = prefixCount(lines[j], '\t');
@@ -138,8 +150,15 @@ export class Talk {
               choices.push(extractKey(lines[j]));
             }
           }
-        } else if (i + 1 < lines.length) {
-          goto = extractKey(lines[i + 1]);
+        } else {
+          // is choice
+          for (let j = i + 1; j < lines.length; j++) {
+            const tabsJ = prefixCount(lines[j], '\t');
+            if (tabsJ % 2 == 0 && (tabsJ < tabsI || j == i + 1)) {
+              goto = extractKey(lines[j]);
+              break;
+            }
+          }
         }
       }
       extraction = extractAttribute(extraction.rest, TalkSymbol.key);
@@ -223,7 +242,7 @@ export class Talk {
     }
   }
 
-  evalJavascript(javascript: string, line?: Line): any {
+  evalJavascript(javascript: string, line: Line): any {
     if (!javascript) return;
     line = line ?? this.getLine();
     this.context.local = line.context;
