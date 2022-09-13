@@ -160,6 +160,27 @@ Hello 2
     expect(prat.getText()).toBe('Hello 2');
   });
 
+  test('Skip default choice', () => {
+    const prat = Prat.fromString(`
+>{start}
+#{showOnce} !!{$l.show = true} ?{$l.show} !{$l.show = false}
+#{skipDefaultChoice} ?{$l.instance.getChoices($g.instance).length > 1}
+#{start}
+!{console.log($g.instance)}
+Hello 1 +{skipDefaultChoice} >{end}
+\tResponse 1 +{showOnce}
+\tDefault >{end}
+>{start}
+#{end}
+Hello 2
+`);
+    expect(prat.getText()).toBe('Hello 1');
+    prat.input();
+    expect(prat.getText()).toBe('Response 1');
+    prat.input();
+    expect(prat.getText()).toBe('Hello 2');
+  });
+
   test('Insertions', () => {
     const prat = Prat.fromString(`
 #{start} Hello \${$g.a}! !!{$g.a = 0} !{$g.a++} >{start}

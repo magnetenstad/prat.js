@@ -76,7 +76,6 @@ class Line {
     if (!this.text) this.text = line.text;
     if (!this.author) this.author = line.author;
     if (!this.goto) this.goto = line.goto;
-    if (!this.choices) this.choices = line.choices;
     if (!this.condition) this.condition = line.condition;
     if (!this.initAction) this.initAction = line.initAction;
     if (!this.action) this.action = line.action;
@@ -88,7 +87,7 @@ class Line {
 export class Talk {
   lines: Map<string, Line>;
   private key: string = '';
-  private context = { global: {}, local: {} };
+  private context = { global: { instance: this }, local: {} };
 
   constructor(lines: Map<string, Line>, key: string) {
     this.lines = lines;
@@ -125,39 +124,40 @@ export class Talk {
     let authorPrev = '';
     lines.forEach((line, i) => {
       const choices: string[] = [];
-      let extraction: Extraction;
-      extraction = extractAttribute(line, TalkSymbol.goto);
-      let goto = extraction.extraction;
 
-      if (isEmpty(goto)) {
-        const tabsI = prefixCount(line, '\t');
-        if (tabsI % 2 == 0) {
-          // is not choice
-          let tabsMin = tabsI;
-          for (let j = i + 1; j < lines.length; j++) {
-            const tabsJ = prefixCount(lines[j], '\t');
-            tabsMin = Math.min(tabsJ, tabsMin);
-            if (tabsJ <= tabsMin && tabsJ % 2 == 0) {
-              goto = extractKey(lines[j]);
-              break;
-            }
-            if (tabsJ == tabsI + 1 && tabsI == tabsMin) {
-              choices.push(extractKey(lines[j]));
-            }
+      let goto = '';
+
+      const tabsI = prefixCount(line, '\t');
+      if (tabsI % 2 == 0) {
+        // is not choice
+        let tabsMin = tabsI;
+        for (let j = i + 1; j < lines.length; j++) {
+          const tabsJ = prefixCount(lines[j], '\t');
+          tabsMin = Math.min(tabsJ, tabsMin);
+          if (tabsJ <= tabsMin && tabsJ % 2 == 0) {
+            goto = extractKey(lines[j]);
+            break;
           }
-        } else {
-          // is choice
-          let tabsMin = tabsI;
-          for (let j = i + 1; j < lines.length; j++) {
-            const tabsJ = prefixCount(lines[j], '\t');
-            tabsMin = Math.min(tabsJ, tabsMin);
-            if (tabsJ % 2 == 0 && (tabsJ == tabsMin || j == i + 1)) {
-              goto = extractKey(lines[j]);
-              break;
-            }
+          if (tabsJ == tabsI + 1 && tabsI == tabsMin) {
+            choices.push(extractKey(lines[j]));
+          }
+        }
+      } else {
+        // is choice
+        let tabsMin = tabsI;
+        for (let j = i + 1; j < lines.length; j++) {
+          const tabsJ = prefixCount(lines[j], '\t');
+          tabsMin = Math.min(tabsJ, tabsMin);
+          if (tabsJ % 2 == 0 && (tabsJ == tabsMin || j == i + 1)) {
+            goto = extractKey(lines[j]);
+            break;
           }
         }
       }
+
+      let extraction: Extraction;
+      extraction = extractAttribute(line, TalkSymbol.goto);
+      goto = extraction.extraction ? extraction.extraction : goto;
       extraction = extractAttribute(extraction.rest, TalkSymbol.key);
       const key = extraction.extraction;
       extraction = extractAttribute(extraction.rest, TalkSymbol.author);
