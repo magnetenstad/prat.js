@@ -19,7 +19,6 @@ Hello 3
 \tResponse 4
 >{start}
 `);
-    console.log(prat);
     expect(prat.getText()).toBe('Hello 1');
     expect(prat.getChoiceTexts().length).toBe(0);
     prat.input();
@@ -34,6 +33,28 @@ Hello 3
     expect(prat.getChoiceTexts()[1]).toBe('Response 4');
     prat.input(1);
     expect(prat.getText()).toBe('Response 4');
+  });
+
+  test('Choices, goto', () => {
+    const prat = Prat.fromString(`
+Hello 1
+\tResponse 1
+\t\tHello 1.1
+\t\t\tResponse 1.1
+\tResponse 2
+\t\tHello 1.2
+Hello 2
+>{start}
+`);
+    expect(prat.getText()).toBe('Hello 1');
+    prat.input();
+    expect(prat.getText()).toBe('Response 1');
+    prat.input();
+    expect(prat.getText()).toBe('Hello 1.1');
+    prat.input();
+    expect(prat.getText()).toBe('Response 1.1');
+    prat.input();
+    expect(prat.getText()).toBe('Hello 2');
   });
 
   test('Conditions', () => {
