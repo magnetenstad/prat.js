@@ -13,62 +13,47 @@ class PratLine {
   text: string;
   author: string;
   goto: string;
-  choices: string[];
+  responses: string[];
   condition: string;
-  initAction: string;
+  prepare: string;
   action: string;
   inherit: string;
   comment: string;
   context: { instance: PratLine } = { instance: this };
+  prat: Prat;
 
   constructor(
+    prat: Prat,
     key: string,
     text: string,
     author: string,
     goto: string,
-    choices: string[],
+    responses: string[],
     condition: string,
-    initAction: string,
+    prepare: string,
     action: string,
     inherit: string,
     comment: string
   ) {
+    this.prat = prat;
     this.key = key;
     this.text = text;
     this.author = author;
     this.goto = goto;
-    this.choices = choices;
+    this.responses = responses;
     this.condition = condition;
-    this.initAction = initAction;
+    this.prepare = prepare;
     this.action = action;
     this.inherit = inherit;
     this.comment = comment;
   }
 
-  getChoices(prat: Prat): PratLine[] {
-    const choices = [...prat.lines.values()].filter((l) =>
-      this.choices.includes(l.key)
-    );
-    for (let i = 0; i < choices.length; i++) {
-      if (
-        choices[i].condition &&
-        !prat.evalJavascript(choices[i].condition, choices[i])
-      ) {
-        choices.splice(i--, 1);
-      }
-    }
-    return choices;
+  getText(): string {
+    return this.prat.getTextOf(this);
   }
 
-  getText(prat: Prat): string {
-    let text = this.text;
-    const symbol = PratSymbol.insert + PratSymbol.left;
-    while (text.includes(symbol)) {
-      text = extract(text, symbol, PratSymbol.right, (js) =>
-        prat.evalJavascript(js, this)
-      ).rest;
-    }
-    return text;
+  getResponses(): PratLine[] {
+    return this.prat.getResponsesOf(this);
   }
 
   apply(line: PratLine | undefined | null): void {
@@ -77,7 +62,7 @@ class PratLine {
     if (!this.author) this.author = line.author;
     if (!this.goto) this.goto = line.goto;
     if (!this.condition) this.condition = line.condition;
-    if (!this.initAction) this.initAction = line.initAction;
+    if (!this.prepare) this.prepare = line.prepare;
     if (!this.action) this.action = line.action;
     if (!this.inherit) this.inherit = line.inherit;
     if (!this.comment) this.comment = line.comment;
@@ -85,22 +70,9 @@ class PratLine {
 }
 
 export class Prat {
-  lines: Map<string, PratLine>;
+  private lines: Map<string, PratLine> = new Map();
   private key: string = '';
   private context = { global: { instance: this }, local: {} };
-
-  constructor(lines: Map<string, PratLine>, key: string) {
-    this.lines = lines;
-    this.lines.forEach((line) => {
-      if (line.inherit) {
-        line.apply(this.lines.get(line.inherit));
-      }
-      if (line.initAction) {
-        this.evalJavascript(line.initAction, line);
-      }
-    });
-    this.setKey(key);
-  }
 
   static fromString(pratString: string): Prat {
     pratString = pratString.replace('\\\n\t', '\\\n');
@@ -120,16 +92,17 @@ export class Prat {
       }
     });
 
-    const pratLines = new Map();
+    const prat = new Prat();
+
     let authorPrev = '';
     lines.forEach((line, i) => {
-      const choices: string[] = [];
+      const responses: string[] = [];
 
       let goto = '';
 
       const tabsI = prefixCount(line, '\t');
       if (tabsI % 2 == 0) {
-        // is not choice
+        // is a statement
         let tabsMin = tabsI;
         for (let j = i + 1; j < lines.length; j++) {
           const tabsJ = prefixCount(lines[j], '\t');
@@ -139,11 +112,11 @@ export class Prat {
             break;
           }
           if (tabsJ == tabsI + 1 && tabsI == tabsMin) {
-            choices.push(extractKey(lines[j]));
+            responses.push(extractKey(lines[j]));
           }
         }
       } else {
-        // is choice
+        // is a response
         let tabsMin = tabsI;
         for (let j = i + 1; j < lines.length; j++) {
           const tabsJ = prefixCount(lines[j], '\t');
@@ -167,7 +140,7 @@ export class Prat {
       extraction = extractAttribute(extraction.rest, PratSymbol.condition);
       const condition = extraction.extraction;
       extraction = extractAttribute(extraction.rest, PratSymbol.prepare);
-      const initAction = extraction.extraction;
+      const prepare = extraction.extraction;
       extraction = extractAttribute(extraction.rest, PratSymbol.action);
       const action = extraction.extraction;
       extraction = extractAttribute(extraction.rest, PratSymbol.inherit);
@@ -175,71 +148,112 @@ export class Prat {
       extraction = extractAttribute(extraction.rest, PratSymbol.comment);
       const comment = extraction.extraction;
 
-      const pratLine = new PratLine(
-        key,
-        extraction.rest.trim(),
-        author,
-        goto,
-        choices,
-        condition,
-        initAction,
-        action,
-        inherit,
-        comment
+      prat.addLine(
+        new PratLine(
+          prat,
+          key,
+          extraction.rest.trim(),
+          author,
+          goto,
+          responses,
+          condition,
+          prepare,
+          action,
+          inherit,
+          comment
+        )
       );
-      pratLines.set(key, pratLine);
       authorPrev = author;
     });
 
-    const prat = new Prat(pratLines, extractKey(lines[0]));
+    prat.setKey(extractKey(lines[0]));
+
     return prat;
   }
 
-  private getLine(): PratLine {
-    let line = this.lines.get(this.key);
-    if (line == null) throw new Error(`Invalid key <${this.key}>.`);
-    return line;
+  private getLine(): PratLine | null {
+    return this.lines.get(this.key) ?? null;
   }
 
-  getText(): string {
-    return this.getLine().getText(this);
+  getResponsesOf(line: PratLine): PratLine[] {
+    const responses = [...this.lines.values()].filter((l) =>
+      line.responses.includes(l.key)
+    );
+    for (let i = 0; i < responses.length; i++) {
+      if (
+        responses[i].condition &&
+        !this.evalJavascript(responses[i].condition, responses[i])
+      ) {
+        responses.splice(i--, 1);
+      }
+    }
+    return responses;
   }
 
-  getChoiceTexts(): string[] {
-    return this.getLine()
-      .getChoices(this)
-      .map((line) => line.getText(this));
+  getTextOf(line: PratLine) {
+    let text = line.text;
+    const symbol = PratSymbol.insert + PratSymbol.left;
+    while (text.includes(symbol)) {
+      text = extract(text, symbol, PratSymbol.right, (js) =>
+        this.evalJavascript(js, line)
+      ).rest;
+    }
+    return text;
   }
 
-  getLineAndChoices(): string {
+  addLine(line: PratLine) {
+    this.lines.set(line.key, line);
+
+    if (line.inherit) {
+      line.apply(this.lines.get(line.inherit));
+    }
+    if (line.prepare) {
+      this.evalJavascript(line.prepare, line);
+    }
+  }
+
+  get() {
     const line = this.getLine();
-    let result = line.toString() + '\n';
-    line.getChoices(this).forEach((choice, i) => {
-      result += i + ' ' + choice + '\n';
-    });
-    return result;
+    return {
+      statement: line?.getText() ?? '',
+      responses: line?.getResponses().map((line) => line.getText()) ?? [],
+      author: line?.author ?? '',
+    };
   }
 
-  input(choiceIndex?: string | number): void {
-    const linePrev = this.getLine();
+  print(callback: (result: string) => void = console.log) {
+    const state = this.get();
+    return callback(
+      state.author
+        ? `${state.author}:`
+        : '' +
+            state.statement +
+            '\n' +
+            state.responses.map((res, i) => `\t(${i}) ${res}`)
+    );
+  }
 
-    const choices = linePrev.getChoices(this);
-    if (choices.length > 0) {
-      choiceIndex = choiceIndex ?? 0;
+  respond(responseIndex?: string | number): void {
+    const linePrev = this.getLine();
+    if (!linePrev) return;
+
+    const responses = linePrev.getResponses();
+    if (responses.length > 0) {
+      responseIndex = responseIndex ?? 0;
       try {
-        if (typeof choiceIndex === 'string') {
-          choiceIndex = parseInt(choiceIndex);
+        if (typeof responseIndex === 'string') {
+          responseIndex = parseInt(responseIndex);
         }
-        this.setKey(choices[choiceIndex].key);
+        this.setKey(responses[responseIndex].key);
       } catch {
-        this.setKey(choices[0].key);
+        this.setKey(responses[0].key);
       }
     } else {
       this.setKey(linePrev.goto);
     }
   }
 
-  evalJavascript(javascript: string, line: PratLine): any {
+  private evalJavascript(javascript: string, line: PratLine): any {
     if (!javascript) return;
     line = line ?? this.getLine();
     this.context.local = line.context;
@@ -252,10 +266,17 @@ export class Prat {
   }
 
   setKey(key: string): void {
+    const line = this.lines.get(key);
     this.key = key;
-    const line = this.lines.get(this.key);
     if (!line) {
-      throw new Error(`Invalid key <${this.key}>.`);
+      if (!key) {
+        console.warn(
+          `Key is empty, this often means that the end of the prat has been reached.`
+        );
+      } else {
+        console.warn(`Invalid key <${this.key}>.`);
+      }
+      return;
     }
     if (line.condition && !this.evalJavascript(line.condition, line)) {
       this.setKey(line.goto);
