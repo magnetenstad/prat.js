@@ -1,3 +1,9 @@
+<div align="center">
+    <img src="assets/prat.svg"
+        width="400"
+        alt="Logo."/>
+</div>
+
 # PratJS
 
 Prat is a dialog system. PratJS is in interpreter of Prat, for the web.
