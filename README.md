@@ -2,7 +2,7 @@
 
 Prat is a dialog system. PratJS is in interpreter of Prat, for the web.
 
-## Getting started
+## Installation
 
 ```sh
 npm i pratjs
