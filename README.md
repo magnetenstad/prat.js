@@ -165,7 +165,7 @@ With insertions, one may include dynamic content in a line.
 ```prat
 !!{$g.age = '< 18'}
 Are you over 18?
-	Yes !{g.age = '18+'}
+	Yes !{$g.age = '18+'}
 	No
 Your age is ${$g.age}.
 ```
