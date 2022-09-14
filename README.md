@@ -110,7 +110,7 @@ class PratSymbol {
 
 #### Key: `#{key}`
 
-By default, all lines are are assigned a `#<line number>` as their key. This may be overridden with the key symbol.
+By default, all lines are are assigned `#<line number>` as their key. This may be overridden with the key symbol.
 
 ```prat
 #{main} The key of this line is 'main'
@@ -163,8 +163,11 @@ With the condition symbol, one may set conditions to when the line show be shown
 With insertions, one may include dynamic content in a line.
 
 ```prat
-!!{$g.age = 21}
-My age is ${$g.age}.
+!!{$g.age = '< 18'}
+Are you over 18?
+	Yes !{g.age = '18+'}
+	No
+Your age is ${$g.age}.
 ```
 
 #### Comment: `%{comment}`
