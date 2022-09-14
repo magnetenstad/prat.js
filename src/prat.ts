@@ -1,4 +1,4 @@
-import { TalkSymbol } from './symbol';
+import { PratSymbol } from './symbol';
 import {
   Extraction,
   extractAttribute,
@@ -8,7 +8,7 @@ import {
   extract,
 } from './util';
 
-class Line {
+class PratLine {
   key: string;
   text: string;
   author: string;
@@ -19,7 +19,7 @@ class Line {
   action: string;
   inherit: string;
   comment: string;
-  context: { instance: Line } = { instance: this };
+  context: { instance: PratLine } = { instance: this };
 
   constructor(
     key: string,
@@ -45,14 +45,14 @@ class Line {
     this.comment = comment;
   }
 
-  getChoices(talk: Talk): Line[] {
-    const choices = [...talk.lines.values()].filter((l) =>
+  getChoices(prat: Prat): PratLine[] {
+    const choices = [...prat.lines.values()].filter((l) =>
       this.choices.includes(l.key)
     );
     for (let i = 0; i < choices.length; i++) {
       if (
         choices[i].condition &&
-        !talk.evalJavascript(choices[i].condition, choices[i])
+        !prat.evalJavascript(choices[i].condition, choices[i])
       ) {
         choices.splice(i--, 1);
       }
@@ -60,18 +60,18 @@ class Line {
     return choices;
   }
 
-  getText(talk: Talk): string {
+  getText(prat: Prat): string {
     let text = this.text;
-    const symbol = TalkSymbol.insert + TalkSymbol.left;
+    const symbol = PratSymbol.insert + PratSymbol.left;
     while (text.includes(symbol)) {
-      text = extract(text, symbol, TalkSymbol.right, (js) =>
-        talk.evalJavascript(js, this)
+      text = extract(text, symbol, PratSymbol.right, (js) =>
+        prat.evalJavascript(js, this)
       ).rest;
     }
     return text;
   }
 
-  apply(line: Line | undefined | null): void {
+  apply(line: PratLine | undefined | null): void {
     if (!line) return;
     if (!this.text) this.text = line.text;
     if (!this.author) this.author = line.author;
@@ -84,12 +84,12 @@ class Line {
   }
 }
 
-export class Talk {
-  lines: Map<string, Line>;
+export class Prat {
+  lines: Map<string, PratLine>;
   private key: string = '';
   private context = { global: { instance: this }, local: {} };
 
-  constructor(lines: Map<string, Line>, key: string) {
+  constructor(lines: Map<string, PratLine>, key: string) {
     this.lines = lines;
     this.lines.forEach((line) => {
       if (line.inherit) {
@@ -102,25 +102,25 @@ export class Talk {
     this.setKey(key);
   }
 
-  static fromString(talk_string: string): Talk {
-    talk_string = talk_string.replace('\\\n\t', '\\\n');
-    talk_string = talk_string.replace('\\\n', '');
-    const lines = talk_string.split('\n').filter((line) => !isEmpty(line));
+  static fromString(pratString: string): Prat {
+    pratString = pratString.replace('\\\n\t', '\\\n');
+    pratString = pratString.replace('\\\n', '');
+    const lines = pratString.split('\n').filter((line) => !isEmpty(line));
 
     // Add key to lines without keys
     lines.forEach((line, i) => {
       if (isEmpty(extractKey(line))) {
         const key_attr =
-          TalkSymbol.key +
-          TalkSymbol.left +
-          TalkSymbol.key +
+          PratSymbol.key +
+          PratSymbol.left +
+          PratSymbol.key +
           i +
-          TalkSymbol.right;
+          PratSymbol.right;
         lines[i] = line + key_attr;
       }
     });
 
-    const talkLines = new Map();
+    const pratLines = new Map();
     let authorPrev = '';
     lines.forEach((line, i) => {
       const choices: string[] = [];
@@ -156,26 +156,26 @@ export class Talk {
       }
 
       let extraction: Extraction;
-      extraction = extractAttribute(line, TalkSymbol.goto);
+      extraction = extractAttribute(line, PratSymbol.goto);
       goto = extraction.extraction ? extraction.extraction : goto;
-      extraction = extractAttribute(extraction.rest, TalkSymbol.key);
+      extraction = extractAttribute(extraction.rest, PratSymbol.key);
       const key = extraction.extraction;
-      extraction = extractAttribute(extraction.rest, TalkSymbol.author);
+      extraction = extractAttribute(extraction.rest, PratSymbol.author);
       const author = !isEmpty(extraction.extraction)
         ? extraction.extraction
         : authorPrev;
-      extraction = extractAttribute(extraction.rest, TalkSymbol.condition);
+      extraction = extractAttribute(extraction.rest, PratSymbol.condition);
       const condition = extraction.extraction;
-      extraction = extractAttribute(extraction.rest, TalkSymbol.prepare);
+      extraction = extractAttribute(extraction.rest, PratSymbol.prepare);
       const initAction = extraction.extraction;
-      extraction = extractAttribute(extraction.rest, TalkSymbol.action);
+      extraction = extractAttribute(extraction.rest, PratSymbol.action);
       const action = extraction.extraction;
-      extraction = extractAttribute(extraction.rest, TalkSymbol.inherit);
+      extraction = extractAttribute(extraction.rest, PratSymbol.inherit);
       const inherit = extraction.extraction;
-      extraction = extractAttribute(extraction.rest, TalkSymbol.comment);
+      extraction = extractAttribute(extraction.rest, PratSymbol.comment);
       const comment = extraction.extraction;
 
-      const lineInst = new Line(
+      const pratLine = new PratLine(
         key,
         extraction.rest.trim(),
         author,
@@ -187,15 +187,15 @@ export class Talk {
         inherit,
         comment
       );
-      talkLines.set(key, lineInst);
+      pratLines.set(key, pratLine);
       authorPrev = author;
     });
 
-    const prat = new Talk(talkLines, extractKey(lines[0]));
+    const prat = new Prat(pratLines, extractKey(lines[0]));
     return prat;
   }
 
-  private getLine(): Line {
+  private getLine(): PratLine {
     let line = this.lines.get(this.key);
     if (line == null) throw new Error(`Invalid key <${this.key}>.`);
     return line;
@@ -239,7 +239,7 @@ export class Talk {
     }
   }
 
-  evalJavascript(javascript: string, line: Line): any {
+  evalJavascript(javascript: string, line: PratLine): any {
     if (!javascript) return;
     line = line ?? this.getLine();
     this.context.local = line.context;

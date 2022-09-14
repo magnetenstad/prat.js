@@ -1,59 +1,64 @@
-# Talk / pratjs
+# PratJS
 
-## Demo
+Prat is a dialog system. PratJS is in interpreter of Prat, for the web.
 
-https://magne.dev/chat
+## Getting started
 
-## NPM
-
-https://www.npmjs.com/package/pratjs
+```sh
+npm i pratjs
+```
 
 ## Syntax highlighting
 
-VSCode extension for .talk files:
-https://github.com/magnetenstad/talkgrammar
+[Prat](https://marketplace.visualstudio.com/items?itemName=magneet.prat) is the official VSCode extension for Prat.
 
-## JS Example
+## Demos
+
+- [magne.dev/chat](https://magne.dev/chat)
+
+## Usage
 
 ```js
-import { Prat } from 'pratjs'
+import { Prat } from 'pratjs';
 
-const talkFile = ...
-const prat = Prat.fromString(talkFile)
+const pratString = `
+Hello World!
+`;
+const prat = Prat.fromString(pratString);
 
-console.log(prat.getText()) // gets current line content
-console.log(prat.getChoiceTexts()) // gets current choice lines
-prat.input(0) // to select a choice, by index
+console.log(prat.getText()); // gets current line content
+console.log(prat.getChoiceTexts()); // gets current choice lines
+prat.input(0); // to select a choice, by index
 ```
 
-## Example Talk file
+## Example Prat file
 
-```
-%{ This is a basic talk file to demonstrate key concepts. }
+```prat
+%{ This is a basic Prat file to demonstrate key concepts. }
 
 #{start}
 @{Mario} Hello World!
-@{World} Hey Mario Brothers, how are you doing? 
+@{World} Hey Mario Brothers, how are you doing?
 
 	@{Mario} We're doing great. %{ A selectable response to line 5 }
-		@{Luigi} Absolutely! 
+		@{Luigi} Absolutely!
 		@{World} How lovely. %{ Will go to 'World: I hear you..' }
 
 	@{Luigi} Not so great, sir. %{ A selectable response to line 5 }
-		@{World} How come? 
+		@{World} How come?
 		@{Mario} Luigi lost his hat this morning.
 		@{World} Well, you can have mine. !{$g.hat = 'worldHat'}
 		@{Luigi} Thanks a bunch! %{ Will go to 'World: I hear you..' }
-		
+
 @{World} I hear you have met someone, Luigi. What is their name?
-	
+
 	@{Luigi} I don't want to talk about it.
 		@{World} My apologies.
-	
+
 	@{Luigi} Yes, I have.
 		@{World} And their name is?
 			@{Luigi} Tom !{$g.name = 'Tom'}
-			@{Luigi} Lisa !{$g.name = 'Lisa'}					
+			@{Luigi} Lisa !{$g.name = 'Lisa'}
 		@{World} I can't wait to meet ${$g.name}.
 
 @{Mario} Well, we better get going.

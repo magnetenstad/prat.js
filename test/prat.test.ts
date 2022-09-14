@@ -166,7 +166,6 @@ Hello 2
 #{showOnce} !!{$l.show = true} ?{$l.show} !{$l.show = false}
 #{skipDefaultChoice} ?{$l.instance.getChoices($g.instance).length > 1}
 #{start}
-!{console.log($g.instance)}
 Hello 1 +{skipDefaultChoice} >{end}
 \tResponse 1 +{showOnce}
 \tDefault >{end}

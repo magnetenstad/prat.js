@@ -1,4 +1,4 @@
-export class TalkSymbol {
+export class PratSymbol {
   static key = '#';
   static author = '@';
   static goto = '>';

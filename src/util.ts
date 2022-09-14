@@ -1,4 +1,4 @@
-import { TalkSymbol } from './symbol';
+import { PratSymbol } from './symbol';
 
 export interface Extraction {
   extraction: string;
@@ -33,8 +33,8 @@ export const extract = (
       end = i;
       break;
     }
-    depth += s.startsWith(TalkSymbol.left) ? 1 : 0;
-    depth -= s.startsWith(TalkSymbol.right) ? 1 : 0;
+    depth += s.startsWith(PratSymbol.left) ? 1 : 0;
+    depth -= s.startsWith(PratSymbol.right) ? 1 : 0;
   }
 
   if (end === -1) {
@@ -52,11 +52,11 @@ export const extract = (
 };
 
 export const extractAttribute = (string: string, symbol: string) => {
-  return extract(string, symbol + TalkSymbol.left, TalkSymbol.right);
+  return extract(string, symbol + PratSymbol.left, PratSymbol.right);
 };
 
 export const extractKey = (string: string) => {
-  return extractAttribute(string, TalkSymbol.key).extraction;
+  return extractAttribute(string, PratSymbol.key).extraction;
 };
 
 export const isEmpty = (str: string | null | undefined) => {
