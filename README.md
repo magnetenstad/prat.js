@@ -6,7 +6,7 @@
 
 # PratJS
 
-Prat is a dialog system. PratJS is in interpreter of Prat, for the web.
+Prat is a dialog system. PratJS is an interpreter of Prat, for the web.
 
 ## Installation
 
