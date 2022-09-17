@@ -10,9 +10,10 @@ Hello world!
 
   test('Out of range', () => {
     const prat = Prat.fromString(`
-Hello world!
+Hello 1
 `);
-    prat.respond();
+    expect(prat.get().statement).toBe('Hello 1');
+    expect(prat.respond().get().statement).toBe('undefined');
   });
 
   test('Reponses', () => {
@@ -144,7 +145,7 @@ Hello 2
     const prat = Prat.fromString(`
 >{start}
 #{showOnce} !!{$l.show = true} ?{$l.show} !{$l.show = false}
-#{skipDefaultResponse} ?{$l.instance.getResponses().length > 1}
+#{skipDefaultResponse} ?{$l.instance.get().responses.length > 1}
 #{start}
 Hello 1 +{skipDefaultResponse} >{end}
 \tResponse 1 +{showOnce}

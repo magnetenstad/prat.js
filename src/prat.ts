@@ -20,10 +20,9 @@ class PratLine {
   inherit: string;
   comment: string;
   context: { instance: PratLine } = { instance: this };
-  prat: Prat;
+  prat: Prat | null = null;
 
   constructor(
-    prat: Prat,
     key: string,
     text: string,
     author: string,
@@ -35,7 +34,6 @@ class PratLine {
     inherit: string,
     comment: string
   ) {
-    this.prat = prat;
     this.key = key;
     this.text = text;
     this.author = author;
@@ -48,12 +46,23 @@ class PratLine {
     this.comment = comment;
   }
 
-  getText(): string {
-    return this.prat.getTextOf(this);
+  get() {
+    if (!this.prat) {
+      throw new Error(`Line has not been initialized with a Prat ${this}`);
+    }
+    return this.prat.getFromKey(this.key);
   }
 
-  getResponses(): PratLine[] {
-    return this.prat.getResponsesOf(this);
+  resetContext() {
+    if (!this.prat) {
+      throw new Error(`Line has not been initialized with a Prat ${this}`);
+    }
+    for (const prop of Object.getOwnPropertyNames(this.context)) {
+      //@ts-ignore
+      delete this.context[prop];
+    }
+    this.context.instance = this;
+    this.prat.pushLine(this);
   }
 
   apply(line: PratLine | undefined | null): void {
@@ -64,17 +73,6 @@ class PratLine {
     if (!this.condition) this.condition = line.condition;
     if (!this.prepare) this.prepare = line.prepare;
     if (!this.action) this.action = line.action;
-    if (!this.inherit) this.inherit = line.inherit;
-    if (!this.comment) this.comment = line.comment;
-  }
-
-  resetContext() {
-    for (const prop of Object.getOwnPropertyNames(this.context)) {
-      //@ts-ignore
-      delete this.context[prop];
-    }
-    this.context.instance = this;
-    this.prat.addLine(this);
   }
 }
 
@@ -84,32 +82,51 @@ export class Prat {
   private context = { global: { instance: this }, local: {} };
   private onCompleteCallback: () => void = () => null;
 
-  get() {
-    const line = this.getLine();
+  constructor(lines: PratLine[]) {
+    lines.forEach((line) => this.pushLine(line));
+    this.setKey(lines[0].key);
+  }
+
+  private getEmpty() {
     return {
-      statement: line?.getText() ?? '',
-      responses: line?.getResponses().map((line) => line.getText()) ?? [],
-      author: line?.author ?? '',
+      statement: 'undefined',
+      responses: [],
+      author: '',
     };
+  }
+
+  get() {
+    return this.getLine()?.get() ?? this.getEmpty();
+  }
+
+  getFromKey(key: string) {
+    const line = this.lines.get(key);
+    return line
+      ? {
+          statement: this.getTextOf(line),
+          responses: this.getResponsesOf(line).map((line) =>
+            this.getTextOf(line)
+          ),
+          author: line.author,
+        }
+      : this.getEmpty();
   }
 
   print(callback: (result: string) => void = console.log) {
     const state = this.get();
-    return callback(
-      state.author
-        ? `${state.author}:`
-        : '' +
-            state.statement +
-            '\n' +
-            state.responses.map((res, i) => `\t(${i}) ${res}`)
-    );
+    const output =
+      (state.author ? `${state.author}:` : '') +
+      (state.statement +
+        '\n' +
+        state.responses.map((res, i) => `\t(${i}) ${res}`));
+    return callback(output);
   }
 
   respond(responseIndex?: string | number): Prat {
     const linePrev = this.getLine();
     if (!linePrev) return this;
 
-    const responses = linePrev.getResponses();
+    const responses = this.getResponsesOf(linePrev);
     if (responses.length > 0) {
       responseIndex = responseIndex ?? 0;
       try {
@@ -126,8 +143,33 @@ export class Prat {
     return this;
   }
 
+  pushLine(line: PratLine) {
+    line.prat = this;
+    this.lines.set(line.key, line);
+
+    if (line.inherit) {
+      line.apply(this.lines.get(line.inherit));
+    }
+    if (line.prepare) {
+      this.evalJavascript(line.prepare, line);
+    }
+  }
+
   onComplete(callback: () => void) {
     this.onCompleteCallback = callback;
+  }
+
+  resetContext() {
+    for (const prop of Object.getOwnPropertyNames(this.context.global)) {
+      //@ts-ignore
+      delete this.context.global[prop];
+    }
+    for (const prop of Object.getOwnPropertyNames(this.context.local)) {
+      //@ts-ignore
+      delete this.context.local[prop];
+    }
+    this.context.global.instance = this;
+    [...this.lines].forEach(([_key, line]) => line.resetContext());
   }
 
   static fromString(pratString: string): Prat {
@@ -148,9 +190,8 @@ export class Prat {
       }
     });
 
-    const prat = new Prat();
-
     let authorPrev = '';
+    const pratLines: PratLine[] = [];
     lines.forEach((line, i) => {
       const responses: string[] = [];
 
@@ -204,9 +245,8 @@ export class Prat {
       extraction = extractAttribute(extraction.rest, PratSymbol.comment);
       const comment = extraction.extraction;
 
-      prat.addLine(
+      pratLines.push(
         new PratLine(
-          prat,
           key,
           extraction.rest.trim(),
           author,
@@ -222,31 +262,14 @@ export class Prat {
       authorPrev = author;
     });
 
-    prat.setKey(extractKey(lines[0]));
-
-    return prat;
+    return new Prat(pratLines);
   }
 
   private getLine(): PratLine | null {
     return this.lines.get(this.key) ?? null;
   }
 
-  addLine(line: PratLine) {
-    this.lines.set(line.key, line);
-
-    if (line.inherit) {
-      line.apply(this.lines.get(line.inherit));
-    }
-    if (line.prepare) {
-      this.evalJavascript(line.prepare, line);
-    }
-  }
-
-  removeLine(line: PratLine) {
-    this.lines.delete(line.key);
-  }
-
-  getTextOf(line: PratLine) {
+  private getTextOf(line: PratLine) {
     let text = line.text;
     const symbol = PratSymbol.insert + PratSymbol.left;
     while (text.includes(symbol)) {
@@ -257,7 +280,7 @@ export class Prat {
     return text;
   }
 
-  getResponsesOf(line: PratLine): PratLine[] {
+  private getResponsesOf(line: PratLine): PratLine[] {
     const responses = [...this.lines.values()].filter((l) =>
       line.responses.includes(l.key)
     );
@@ -272,9 +295,9 @@ export class Prat {
     return responses;
   }
 
-  setKey(key: string): void {
-    const line = this.lines.get(key);
+  private setKey(key: string): void {
     this.key = key;
+    const line = this.lines.get(this.key);
     if (!line) {
       if (!key) {
         this.onCompleteCallback();
@@ -301,18 +324,5 @@ export class Prat {
       `"use strict"; const $g = this.global; const $l = this.local; ` +
       (javascript.includes(';') ? javascript : `return (${javascript})`);
     return Function(functionString).bind(this.context)();
-  }
-
-  resetContext() {
-    for (const prop of Object.getOwnPropertyNames(this.context.global)) {
-      //@ts-ignore
-      delete this.context.global[prop];
-    }
-    for (const prop of Object.getOwnPropertyNames(this.context.local)) {
-      //@ts-ignore
-      delete this.context.local[prop];
-    }
-    this.context.global.instance = this;
-    [...this.lines].forEach(([_key, line]) => line.resetContext());
   }
 }
