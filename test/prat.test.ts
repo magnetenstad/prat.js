@@ -28,18 +28,14 @@ Hello 3
 `);
     expect(prat.get().statement).toBe('Hello 1');
     expect(prat.get().responses.length).toBe(0);
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 2');
     expect(prat.get().responses[0]).toBe('Response 1');
     expect(prat.get().responses[1]).toBe('Response 2');
-    prat.respond();
-    expect(prat.get().statement).toBe('Response 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 3');
+    expect(prat.respond().get().statement).toBe('Response 1');
+    expect(prat.respond().get().statement).toBe('Hello 3');
     expect(prat.get().responses[0]).toBe('Response 3');
     expect(prat.get().responses[1]).toBe('Response 4');
-    prat.respond(1);
-    expect(prat.get().statement).toBe('Response 4');
+    expect(prat.respond(1).get().statement).toBe('Response 4');
   });
 
   test('Reponses, goto', () => {
@@ -54,14 +50,10 @@ Hello 2
 >{start}
 `);
     expect(prat.get().statement).toBe('Hello 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Response 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 1.1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Response 1.1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Response 1');
+    expect(prat.respond().get().statement).toBe('Hello 1.1');
+    expect(prat.respond().get().statement).toBe('Response 1.1');
+    expect(prat.respond().get().statement).toBe('Hello 2');
   });
 
   test('Conditions', () => {
@@ -71,8 +63,7 @@ Hello 2 ?{false}
 Hello 3
 `);
     expect(prat.get().statement).toBe('Hello 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 3');
+    expect(prat.respond().get().statement).toBe('Hello 3');
   });
 
   test('Actions, global scope', () => {
@@ -85,12 +76,9 @@ Hello 5 ?{$g.x}
 Hello 6 ?{!$g.x}
 `);
     expect(prat.get().statement).toBe('Hello 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 3');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 4');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 5');
+    expect(prat.respond().get().statement).toBe('Hello 3');
+    expect(prat.respond().get().statement).toBe('Hello 4');
+    expect(prat.respond().get().statement).toBe('Hello 5');
   });
 
   test('Actions, local scope', () => {
@@ -102,14 +90,10 @@ Hello 3 !!{$l.show = true} ?{$l.show} !{$l.show = false}
 >{start}
 `);
     expect(prat.get().statement).toBe('Hello 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 3');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 3');
+    expect(prat.respond().get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 2');
   });
 
   test('Inheritance', () => {
@@ -124,14 +108,10 @@ Hello 3 +{showOnce}
 >{start}
 `);
     expect(prat.get().statement).toBe('Hello 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 3');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 3');
+    expect(prat.respond().get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 2');
   });
 
   test('Inheritance on response', () => {
@@ -150,21 +130,14 @@ Hello 2
     expect(prat.get().responses.length).toBe(2);
     expect(prat.get().responses[0]).toBe('Response 1');
     expect(prat.get().responses[1]).toBe('Response 2');
-    prat.respond();
-    expect(prat.get().statement).toBe('Response 1');
-    prat.respond();
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 1');
+    expect(prat.respond().get().statement).toBe('Response 1');
+    expect(prat.respond().respond().get().statement).toBe('Hello 1');
     expect(prat.get().responses.length).toBe(1);
     expect(prat.get().responses[0]).toBe('Response 2');
-    prat.respond(1);
-    expect(prat.get().statement).toBe('Response 2');
-    prat.respond();
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 1');
+    expect(prat.respond(1).get().statement).toBe('Response 2');
+    expect(prat.respond().respond().get().statement).toBe('Hello 1');
     expect(prat.get().responses.length).toBe(0);
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 2');
   });
 
   test('Skip default response', () => {
@@ -181,10 +154,8 @@ Hello 1 +{skipDefaultResponse} >{end}
 Hello 2
 `);
     expect(prat.get().statement).toBe('Hello 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Response 1');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Response 1');
+    expect(prat.respond().get().statement).toBe('Hello 2');
   });
 
   test('Insertions', () => {
@@ -192,9 +163,32 @@ Hello 2
 #{start} Hello \${$g.a}! !!{$g.a = 0} !{$g.a++} >{start}
 `);
     expect(prat.get().statement).toBe('Hello 1!');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 2!');
-    prat.respond();
-    expect(prat.get().statement).toBe('Hello 3!');
+    expect(prat.respond().get().statement).toBe('Hello 2!');
+    expect(prat.respond().get().statement).toBe('Hello 3!');
+  });
+
+  test('Reset global context', () => {
+    const prat = Prat.fromString(`
+Hello \${$g.a} !!{$g.a = 1}
+Hello \${$g.a} !{$g.a++}
+!{$g.instance.resetContext()}
+Hello \${$g.a}
+`);
+    expect(prat.get().statement).toBe('Hello 1');
+    expect(prat.respond().get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 1');
+  });
+
+  test('Reset local context', () => {
+    const prat = Prat.fromString(`
+#{start}
+Hello \${$l.a} !!{$l.a = 0} !{$l.a++;}
+Hello \${$l.a} !!{$l.a = 0} !{$l.instance.resetContext(); $l.a++;}
+>{start}
+`);
+    expect(prat.get().statement).toBe('Hello 1');
+    expect(prat.respond().get().statement).toBe('Hello 1');
+    expect(prat.respond().get().statement).toBe('Hello 2');
+    expect(prat.respond().get().statement).toBe('Hello 1');
   });
 });
