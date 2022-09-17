@@ -191,4 +191,20 @@ Hello \${$l.a} !!{$l.a = 0} !{$l.instance.resetContext(); $l.a++;}
     expect(prat.respond().get().statement).toBe('Hello 2');
     expect(prat.respond().get().statement).toBe('Hello 1');
   });
+
+  test('On complete', () => {
+    const prat = Prat.fromString(`
+Hello 1
+`);
+    let x = 0;
+    prat.onComplete(() => {
+      x++;
+    });
+    expect(prat.get().statement).toBe('Hello 1');
+    expect(x).toBe(0);
+    prat.respond();
+    expect(x).toBe(1);
+    prat.respond();
+    expect(x).toBe(1);
+  });
 });
