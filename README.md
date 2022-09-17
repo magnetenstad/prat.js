@@ -63,7 +63,7 @@ More examples may be seen below or in the [tests](test/prat.test.ts).
 ## API
 
 ```js
-export declare class Prat {
+class Prat {
   constructor(lines: PratLine[]);
   static fromString(pratString: string): Prat;
   get(): {
