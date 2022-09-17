@@ -67,19 +67,20 @@ class Prat {
   constructor(lines: PratLine[]);
   static fromString(pratString: string): Prat;
   get(): {
-      statement: string;
-      responses: string[];
-      author: string;
+    statement: string;
+    responses: string[];
+    author: string;
   };
   getFromKey(key: string): {
-      statement: string;
-      responses: string[];
-      author: string;
+    statement: string;
+    responses: string[];
+    author: string;
   };
   print(callback?: (result: string) => void): Prat;
   respond(responseIndex?: string | number): Prat;
   pushLine(line: PratLine): Prat;
-  onComplete(callback: () => void): Prat;
+  onEnd(callback: () => void): Prat;
+  hasEnded(): boolean;
   resetContext(): Prat;
 }
 ```

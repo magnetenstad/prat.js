@@ -198,14 +198,19 @@ Hello \${$l.a} !!{$l.a = 0} !{$l.instance.resetContext(); $l.a++;}
 Hello 1
 `);
     let x = 0;
-    prat.onComplete(() => {
+    prat.onEnd(() => {
       x++;
     });
     expect(prat.get().statement).toBe('Hello 1');
+    expect(prat.hasEnded()).toBe(false);
     expect(x).toBe(0);
     prat.respond();
     expect(x).toBe(1);
+    expect(prat.get().statement).toBe('undefined');
+    expect(prat.hasEnded()).toBe(true);
     prat.respond();
     expect(x).toBe(1);
+    expect(prat.get().statement).toBe('undefined');
+    expect(prat.hasEnded()).toBe(true);
   });
 });

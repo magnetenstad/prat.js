@@ -80,7 +80,8 @@ export class Prat {
   private lines: Map<string, PratLine> = new Map();
   private key: string = '';
   private context = { global: { instance: this }, local: {} };
-  private onCompleteCallback: () => void = () => null;
+  private onEndCallback: () => void = () => null;
+  private ended = false;
 
   constructor(lines: PratLine[]) {
     lines.forEach((line) => this.pushLine(line));
@@ -126,7 +127,7 @@ export class Prat {
 
   respond(responseIndex?: string | number): Prat {
     const linePrev = this.getLine();
-    if (!linePrev) return this;
+    if (this.ended || !linePrev) return this;
 
     const responses = this.getResponsesOf(linePrev);
     if (responses.length > 0) {
@@ -158,9 +159,13 @@ export class Prat {
     return this;
   }
 
-  onComplete(callback: () => void): Prat {
-    this.onCompleteCallback = callback;
+  onEnd(callback: () => void): Prat {
+    this.onEndCallback = callback;
     return this;
+  }
+
+  hasEnded() {
+    return this.ended;
   }
 
   resetContext(): Prat {
@@ -302,11 +307,13 @@ export class Prat {
   }
 
   private setKey(key: string): void {
+    this.ended = false;
     this.key = key;
     const line = this.lines.get(this.key);
     if (!line) {
       if (!key) {
-        this.onCompleteCallback();
+        this.onEndCallback();
+        this.ended = true;
       } else {
         console.warn(`Invalid key <${this.key}>.`);
       }
