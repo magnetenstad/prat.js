@@ -112,14 +112,16 @@ export class Prat {
       : this.getEmpty();
   }
 
-  print(callback: (result: string) => void = console.log) {
+  print(callback: (result: string) => void = console.log): Prat {
     const state = this.get();
     const output =
       (state.author ? `${state.author}:` : '') +
       (state.statement +
         '\n' +
         state.responses.map((res, i) => `\t(${i}) ${res}`));
-    return callback(output);
+
+    callback(output);
+    return this;
   }
 
   respond(responseIndex?: string | number): Prat {
@@ -143,7 +145,7 @@ export class Prat {
     return this;
   }
 
-  pushLine(line: PratLine) {
+  pushLine(line: PratLine): Prat {
     line.prat = this;
     this.lines.set(line.key, line);
 
@@ -153,13 +155,15 @@ export class Prat {
     if (line.prepare) {
       this.evalJavascript(line.prepare, line);
     }
+    return this;
   }
 
-  onComplete(callback: () => void) {
+  onComplete(callback: () => void): Prat {
     this.onCompleteCallback = callback;
+    return this;
   }
 
-  resetContext() {
+  resetContext(): Prat {
     for (const prop of Object.getOwnPropertyNames(this.context.global)) {
       //@ts-ignore
       delete this.context.global[prop];
@@ -170,6 +174,8 @@ export class Prat {
     }
     this.context.global.instance = this;
     [...this.lines].forEach(([_key, line]) => line.resetContext());
+
+    return this;
   }
 
   static fromString(pratString: string): Prat {

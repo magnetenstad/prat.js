@@ -63,15 +63,24 @@ More examples may be seen below or in the [tests](test/prat.test.ts).
 ## API
 
 ```js
-class Prat {
+export declare class Prat {
+  constructor(lines: PratLine[]);
   static fromString(pratString: string): Prat;
   get(): {
       statement: string;
       responses: string[];
       author: string;
   };
-  print(callback?: (result: string) => void): void;
-  respond(responseIndex?: string | number): void;
+  getFromKey(key: string): {
+      statement: string;
+      responses: string[];
+      author: string;
+  };
+  print(callback?: (result: string) => void): Prat;
+  respond(responseIndex?: string | number): Prat;
+  pushLine(line: PratLine): Prat;
+  onComplete(callback: () => void): Prat;
+  resetContext(): Prat;
 }
 ```
 
@@ -79,7 +88,7 @@ class Prat {
 
 A Prat consists of statements and responses. A statement may lead to multiple selectable responses, but a response may only lead to one statement. An even number of tabs indicates a statement, and an odd number of tabs indicates a response.
 
-```
+```prat
 This is a statement.
 	This is a response.
 		This statement will follow the first response.
