@@ -69,12 +69,12 @@ Hello 3
 
   test('Actions, global scope', () => {
     const prat = Prat.fromString(`
-Hello 1 !{$g.x = false}
-Hello 2 ?{$g.x}
-Hello 3 ?{!$g.x}
-Hello 4 !{$g.x = true}
-Hello 5 ?{$g.x}
-Hello 6 ?{!$g.x}
+Hello 1 !{g.x = false}
+Hello 2 ?{g.x}
+Hello 3 ?{!g.x}
+Hello 4 !{g.x = true}
+Hello 5 ?{g.x}
+Hello 6 ?{!g.x}
 `);
     expect(prat.get().statement).toBe('Hello 1');
     expect(prat.respond().get().statement).toBe('Hello 3');
@@ -85,9 +85,9 @@ Hello 6 ?{!$g.x}
   test('Actions, local scope', () => {
     const prat = Prat.fromString(`
 #{start}
-Hello 1 !!{$l.show = true} ?{$l.show} !{$l.show = false}
+Hello 1 !!{l.show = true} ?{l.show} !{l.show = false}
 Hello 2
-Hello 3 !!{$l.show = true} ?{$l.show} !{$l.show = false}
+Hello 3 !!{l.show = true} ?{l.show} !{l.show = false}
 >{start}
 `);
     expect(prat.get().statement).toBe('Hello 1');
@@ -100,7 +100,7 @@ Hello 3 !!{$l.show = true} ?{$l.show} !{$l.show = false}
   test('Inheritance', () => {
     const prat = Prat.fromString(`
 >{start}
-#{showOnce} !!{$l.show = true} ?{$l.show} !{$l.show = false}
+#{showOnce} !!{l.show = true} ?{l.show} !{l.show = false}
 
 #{start}
 Hello 1 +{showOnce}
@@ -118,7 +118,7 @@ Hello 3 +{showOnce}
   test('Inheritance on response', () => {
     const prat = Prat.fromString(`
 >{start}
-#{showOnce} !!{$l.show = true} ?{$l.show} !{$l.show = false}
+#{showOnce} !!{l.show = true} ?{l.show} !{l.show = false}
 
 #{start}
 Hello 1
@@ -144,8 +144,8 @@ Hello 2
   test('Skip default response', () => {
     const prat = Prat.fromString(`
 >{start}
-#{showOnce} !!{$l.show = true} ?{$l.show} !{$l.show = false}
-#{skipDefaultResponse} ?{$l.instance.get().responses.length > 1}
+#{showOnce} !!{l.show = true} ?{l.show} !{l.show = false}
+#{skipDefaultResponse} ?{l.instance.get().responses.length > 1}
 #{start}
 Hello 1 +{skipDefaultResponse} >{end}
 \tResponse 1 +{showOnce}
@@ -161,7 +161,7 @@ Hello 2
 
   test('Insertions', () => {
     const prat = Prat.fromString(`
-#{start} Hello \${$g.a}! !!{$g.a = 0} !{$g.a++} >{start}
+#{start} Hello \${g.a}! !!{g.a = 0} !{g.a++} >{start}
 `);
     expect(prat.get().statement).toBe('Hello 1!');
     expect(prat.respond().get().statement).toBe('Hello 2!');
@@ -170,10 +170,10 @@ Hello 2
 
   test('Reset global context', () => {
     const prat = Prat.fromString(`
-Hello \${$g.a} !!{$g.a = 1}
-Hello \${$g.a} !{$g.a++}
-!{$g.instance.resetContext()}
-Hello \${$g.a}
+Hello \${g.a} !!{g.a = 1}
+Hello \${g.a} !{g.a++}
+!{g.instance.resetContext()}
+Hello \${g.a}
 `);
     expect(prat.get().statement).toBe('Hello 1');
     expect(prat.respond().get().statement).toBe('Hello 2');
@@ -183,8 +183,8 @@ Hello \${$g.a}
   test('Reset local context', () => {
     const prat = Prat.fromString(`
 #{start}
-Hello \${$l.a} !!{$l.a = 0} !{$l.a++;}
-Hello \${$l.a} !!{$l.a = 0} !{$l.instance.resetContext(); $l.a++;}
+Hello \${l.a} !!{l.a = 0} !{l.a++;}
+Hello \${l.a} !!{l.a = 0} !{l.instance.resetContext(); l.a++;}
 >{start}
 `);
     expect(prat.get().statement).toBe('Hello 1');

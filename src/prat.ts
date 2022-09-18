@@ -334,7 +334,7 @@ export class Prat {
     line = line ?? this.getLine();
     this.context.local = line.context;
     const functionString =
-      `"use strict"; const $g = this.global; const $l = this.local; ` +
+      `"use strict"; const g = this.global; const l = this.local; ` +
       (javascript.includes(';') ? javascript : `return (${javascript})`);
     return Function(functionString).bind(this.context)();
   }

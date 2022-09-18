@@ -206,4 +206,4 @@ These lines will be shown in every loop.
 
 ### Context
 
-Variables should be assigned to global (`$g`) or local (`$l`) context. Global variables are accessible from the whole talk, while local variables are local to a single line. You may also access the Prat and PratLine instances from the talk with `$g.instance` and `$l.instance`, but this is highly experimental.
+Variables should be assigned to global `g` or local `l` context. Global variables are accessible from the whole talk, while local variables are local to a single line. You may also access the Prat and PratLine instances from the talk with `g.instance` and `l.instance`, but this is highly experimental.
