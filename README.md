@@ -146,10 +146,10 @@ The author symbol is used to assign an author to the line. The author may be acc
 
 #### Prepare: `!!{javascript}`
 
-The prepare symbol is used to run code at talk initialization. This is useful to initialize variables. `$g` indicates global [context](#context).
+The prepare symbol is used to run code at talk initialization. This is useful to initialize variables. `g` indicates global [context](#context).
 
 ```prat
-Let's initialize a global variable !!{$g.shouldSkipLine = true}
+Let's initialize a global variable !!{g.shouldSkipLine = true}
 ```
 
 #### Action: `!{javascript}`
@@ -157,7 +157,7 @@ Let's initialize a global variable !!{$g.shouldSkipLine = true}
 The action symbol is used to run code when a line is reached. This is useful to update variables.
 
 ```prat
-Let's toggle this variable !{$g.shouldSkipLine = !$g.shouldSkipLine}
+Let's toggle this variable !{g.shouldSkipLine = !g.shouldSkipLine}
 ```
 
 #### Condition: `?{javascript}`
@@ -165,7 +165,7 @@ Let's toggle this variable !{$g.shouldSkipLine = !$g.shouldSkipLine}
 With the condition symbol, one may set conditions to when the line show be shown or skipped.
 
 ```prat
-?{$g.shouldShowLine} This line is skipped if the local variable 'shouldShowLine' is false.
+?{g.shouldShowLine} This line is skipped if the local variable 'shouldShowLine' is false.
 ```
 
 #### Insert: `${javascript}`
@@ -173,11 +173,11 @@ With the condition symbol, one may set conditions to when the line show be shown
 With insertions, one may include dynamic content in a line.
 
 ```prat
-!!{$g.age = '< 18'}
+!!{g.age = '< 18'}
 Are you over 18?
-	Yes !{$g.age = '18+'}
+	Yes !{g.age = '18+'}
 	No
-Your age is ${$g.age}.
+Your age is ${g.age}.
 ```
 
 #### Comment: `%{comment}`
@@ -194,7 +194,7 @@ With the inherit symbol, a line may use extensions from another line. This is us
 >{start}
 
 %{Declarations}
-#{showOnce} !!{$l.show = true} ?{$l.show} !{$l.show = false}
+#{showOnce} !!{l.show = true} ?{l.show} !{l.show = false}
 
 #{start}
 Hello.
